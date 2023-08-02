@@ -139,20 +139,28 @@ class JunitReporter extends reporter_1.default {
             .property('capabilities', runner.sanitizedCapabilities)
             .property(this._fileNameLabel, filePath);
         suite = this._addFailedHooks(suite);
+
+        const classNameFormat = this.options.classNameFormat
+            ? this.options.classNameFormat({ packageName: this._packageName, suite })
+            : `${this._packageName}.${(suite.fullTitle || suite.title).replace(/\s/g, '_')}`;
+
+        // Add suite name as a test case
+        const testCase = testSuite
+            .testCase()
+            .className(classNameFormat)
+            .name(suiteName)
+            .time(suite._duration / 1000);
+
+        if (this.options.addFileAttribute) {
+            testCase.file(filePath);
+        }
+
         for (let testKey of Object.keys(suite.tests)) {
             if (testKey === 'undefined') { // fix cucumber hooks crashing reporter (INFO: we may not need this anymore)
                 continue;
             }
             const test = suite.tests[testKey];
-            const testName = this._prepareName(test.title);
-            const classNameFormat = this.options.classNameFormat ? this.options.classNameFormat({ packageName: this._packageName, suite }) : `${this._packageName}.${suite.fullTitle.replace(/\s/g, '_')}`;
-            const testCase = testSuite.testCase()
-                .className(classNameFormat)
-                .name(testName)
-                .time(test._duration / 1000);
-            if (this.options.addFileAttribute) {
-                testCase.file(filePath);
-            }
+
             if (test.state === 'pending' || test.state === 'skipped') {
                 testCase.skipped();
                 if (test.error) {
@@ -181,9 +189,6 @@ class JunitReporter extends reporter_1.default {
                 }
                 testCase.failure();
             }
-            const output = this._getStandardOutput(test);
-            if (output)
-                testCase.standardOutput(`\n${output}\n`);
         }
         return builder;
     }
@@ -253,7 +258,7 @@ class JunitReporter extends reporter_1.default {
                 case 'command':
                     standardOutput.push(data.method
                         ? `COMMAND: ${data.method.toUpperCase()} ` +
-                            `${data.endpoint.replace(':sessionId', data.sessionId)} - ${this._format(data.body)}`
+                        `${data.endpoint.replace(':sessionId', data.sessionId)} - ${this._format(data.body)}`
                         : `COMMAND: ${data.command} - ${this._format(data.params)}`);
                     break;
                 case 'result':
