@@ -51,147 +51,6 @@ class JunitReporter extends reporter_1.default {
         });
         return suite;
     }
-    _addCucumberFeatureToBuilder(builder, runner, specFileName, suite) {
-        const featureName = !this.options.suiteNameFormat || this.options.suiteNameFormat instanceof RegExp
-            ? this._prepareName(suite.title)
-            : this.options.suiteNameFormat({ name: this.options.suiteNameFormat.name, suite });
-        const filePath = specFileName.replace(process.cwd(), '.');
-        if (suite.type === 'feature') {
-            const feature = builder.testSuite()
-                .name(featureName)
-                .timestamp(suite.start)
-                .time(suite._duration / 1000)
-                .property('specId', 0)
-                .property(this._suiteTitleLabel, suite.title)
-                .property('capabilities', runner.sanitizedCapabilities)
-                .property(this._fileNameLabel, filePath);
-            this._activeFeature = feature;
-            this._activeFeatureName = featureName;
-        }
-        else if (this._activeFeature) {
-            let scenario = suite;
-            const testName = this._prepareName(suite.title);
-            const classNameFormat = this.options.classNameFormat ? this.options.classNameFormat({ packageName: this._packageName, activeFeatureName: this._activeFeatureName }) : `${this._packageName}.${this._activeFeatureName}`;
-            const testCase = this._activeFeature.testCase()
-                .className(classNameFormat)
-                .name(`${testName}`)
-                .time(scenario._duration / 1000);
-            if (this.options.addFileAttribute) {
-                testCase.file(filePath);
-            }
-            scenario = this._addFailedHooks(scenario);
-            let stepsOutput = '';
-            let isFailing = false;
-            for (let stepKey of Object.keys(scenario.tests)) { // tests are trested as steps in Cucumber
-                if (stepKey === 'undefined') { // fix cucumber hooks crashing reporter
-                    continue;
-                }
-                let stepEmoji = '✅';
-                const step = scenario.tests[stepKey];
-                if (step.state === 'pending' || step.state === 'skipped') {
-                    if (!isFailing) {
-                        testCase.skipped();
-                    }
-                    stepEmoji = '⚠️';
-                }
-                else if (step.state === 'failed') {
-                    if (step.error) {
-                        if (this.options.errorOptions) {
-                            const errorOptions = this.options.errorOptions;
-                            for (const key of Object.keys(errorOptions)) {
-                                testCase[key](step.error
-                                    ? step.error[errorOptions[key]]
-                                    : null);
-                            }
-                        }
-                        else {
-                            // default
-                            testCase.error(step.error.message);
-                        }
-                        testCase.standardError(`\n${step.error.stack}\n`);
-                    }
-                    else {
-                        testCase.error();
-                    }
-                    testCase.failure();
-                    isFailing = true;
-                    stepEmoji = '❗';
-                }
-                const output = this._getStandardOutput(step);
-                stepsOutput += output ? stepEmoji + ' ' + step.title : stepEmoji + ' ' + step.title + '\n' + output;
-            }
-            testCase.standardOutput(`\n${stepsOutput}\n`);
-        }
-        return builder;
-    }
-    _addSuiteToBuilder(builder, runner, specFileName, suite) {
-        var _a, _b;
-        const filePath = specFileName.replace(process.cwd(), '.');
-        const suiteName = !this.options.suiteNameFormat || this.options.suiteNameFormat instanceof RegExp
-            ? this._prepareName(suite.title)
-            : this.options.suiteNameFormat({ name: this.options.suiteNameFormat.name, suite });
-        let testSuite = builder.testSuite()
-            .name(suiteName)
-            .timestamp(suite.start)
-            .time(suite._duration / 1000)
-            .property('specId', 0)
-            .property(this._suiteTitleLabel, suite.title)
-            .property('capabilities', runner.sanitizedCapabilities)
-            .property(this._fileNameLabel, filePath);
-        suite = this._addFailedHooks(suite);
-
-        const classNameFormat = this.options.classNameFormat
-            ? this.options.classNameFormat({ packageName: this._packageName, suite })
-            : `${this._packageName}.${(suite.fullTitle || suite.title).replace(/\s/g, '_')}`;
-
-        // Add suite name as a test case
-        const testCase = testSuite
-            .testCase()
-            .className(classNameFormat)
-            .name(suiteName)
-            .time(suite._duration / 1000);
-
-        if (this.options.addFileAttribute) {
-            testCase.file(filePath);
-        }
-
-        for (let testKey of Object.keys(suite.tests)) {
-            if (testKey === 'undefined') { // fix cucumber hooks crashing reporter (INFO: we may not need this anymore)
-                continue;
-            }
-            const test = suite.tests[testKey];
-
-            if (test.state === 'pending' || test.state === 'skipped') {
-                testCase.skipped();
-                if (test.error) {
-                    testCase.standardError(`\n${(_a = test.error.stack) === null || _a === void 0 ? void 0 : _a.replace(ansiRegex, '')}\n`);
-                }
-            }
-            else if (test.state === 'failed') {
-                if (test.error) {
-                    if (test.error.message) {
-                        test.error.message = test.error.message.replace(ansiRegex, '');
-                    }
-                    if (this.options.errorOptions) {
-                        const errorOptions = this.options.errorOptions;
-                        for (const key of Object.keys(errorOptions)) {
-                            testCase[key](test.error[errorOptions[key]]);
-                        }
-                    }
-                    else {
-                        // default
-                        testCase.error(test.error.message);
-                    }
-                    testCase.standardError(`\n${(_b = test.error.stack) === null || _b === void 0 ? void 0 : _b.replace(ansiRegex, '')}\n`);
-                }
-                else {
-                    testCase.error();
-                }
-                testCase.failure();
-            }
-        }
-        return builder;
-    }
     _buildJunitXml(runner) {
         let builder = junit_report_builder_1.default.newBuilder();
         if (runner.config.hostname !== undefined && runner.config.hostname.indexOf('browserstack') > -1) {
@@ -211,29 +70,62 @@ class JunitReporter extends reporter_1.default {
         else {
             this._packageName = this.options.packageName || runner.sanitizedCapabilities;
         }
-        const isCucumberFrameworkRunner = runner.config.framework === 'cucumber';
-        if (isCucumberFrameworkRunner) {
-            this._packageName = `CucumberJUnitReport-${this._packageName}`;
-            this._suiteTitleLabel = 'featureName';
-            this._fileNameLabel = 'featureFile';
-        }
-        else {
-            this._suiteTitleLabel = 'suiteName';
-            this._fileNameLabel = 'file';
-        }
+
+        this._suiteTitleLabel = 'suiteName';
+        this._fileNameLabel = 'file';
+
         runner.specs.forEach((specFileName) => {
-            if (isCucumberFrameworkRunner) {
-                this._buildOrderedReport(builder, runner, specFileName, 'feature', isCucumberFrameworkRunner);
-                this._buildOrderedReport(builder, runner, specFileName, 'scenario', isCucumberFrameworkRunner);
-            }
-            else {
-                this._buildOrderedReport(builder, runner, specFileName, '', isCucumberFrameworkRunner);
-            }
+            this._buildOrderedReport(builder, runner, specFileName);
         });
         return builder.build();
     }
-    _buildOrderedReport(builder, runner, specFileName, type, isCucumberFrameworkRunner) {
+    _buildOrderedReport(builder, runner, specFileName) {
+        let rootSuites = [];
+        let rootTestCases = [];
+        let _a, _b;
+
         for (let suiteKey of Object.keys(this.suites)) {
+            let suite = this.suites[suiteKey];
+
+            // Add only the top level describe block as a test suite
+            if (!suite.parent) {
+                const filePath = specFileName.replace(process.cwd(), '.');
+                const suiteName = !this.options.suiteNameFormat || this.options.suiteNameFormat instanceof RegExp
+                    ? this._prepareName(suite.title)
+                    : this.options.suiteNameFormat({ name: this.options.suiteNameFormat.name, suite });
+
+                let testSuite = builder.testSuite()
+                    .name(suiteName)
+                    .timestamp(suite.start)
+                    .time(suite._duration / 1000)
+                    .property('specId', 0)
+                    .property(this._suiteTitleLabel, suite.title)
+                    .property('capabilities', runner.sanitizedCapabilities)
+                    .property(this._fileNameLabel, filePath);
+                suite = this._addFailedHooks(suite);
+
+                const classNameFormat = this.options.classNameFormat
+                    ? this.options.classNameFormat({ packageName: this._packageName, suite })
+                    : `${this._packageName}.${(suite.fullTitle || suite.title).replace(/\s/g, '_')}`;
+
+                // Add suite name as a test case
+                const testCase = testSuite
+                    .testCase()
+                    .className(classNameFormat)
+                    .name(suiteName)
+                    .time(suite._duration / 1000);
+
+                if (this.options.addFileAttribute) {
+                    testCase.file(filePath);
+                }
+
+                rootSuites.push(suite)
+                rootTestCases.push(testCase)
+            }
+        }
+
+        for (let suiteKey of Object.keys(this.suites)) {
+
             /**
              * ignore root before all
              */
@@ -242,12 +134,46 @@ class JunitReporter extends reporter_1.default {
                 continue;
             }
             const suite = this.suites[suiteKey];
-            if (isCucumberFrameworkRunner && suite.type === type && specFileName === suite.file) {
-                builder = this._addCucumberFeatureToBuilder(builder, runner, specFileName, suite);
+
+            for (let testKey of Object.keys(suite.tests)) {
+                if (testKey === 'undefined') { // fix cucumber hooks crashing reporter (INFO: we may not need this anymore)
+                    continue;
+                }
+                const test = suite.tests[testKey];
+                const testTitle = test.fullTitle || test.title;
+                const rootTestCaseIndex = rootTestCases.findIndex(testCase => testTitle.includes(testCase._attributes.name))
+                const rootTestCase = rootTestCases[rootTestCaseIndex]
+
+                if (test.state === 'pending' || test.state === 'skipped') {
+                    rootTestCase.skipped();
+                    if (test.error) {
+                        rootTestCase.standardError(`\n${(_a = test.error.stack) === null || _a === void 0 ? void 0 : _a.replace(ansiRegex, '')}\n`);
+                    }
+                }
+                else if (test.state === 'failed') {
+                    if (test.error) {
+                        if (test.error.message) {
+                            test.error.message = test.error.message.replace(ansiRegex, '');
+                        }
+                        if (this.options.errorOptions) {
+                            const errorOptions = this.options.errorOptions;
+                            for (const key of Object.keys(errorOptions)) {
+                                rootTestCase[key](test.error[errorOptions[key]]);
+                            }
+                        }
+                        else {
+                            // default
+                            rootTestCase.error(test.error.message);
+                        }
+                        rootTestCase.standardError(`\n${(_b = test.error.stack) === null || _b === void 0 ? void 0 : _b.replace(ansiRegex, '')}\n`);
+                    }
+                    else {
+                        rootTestCase.error();
+                    }
+                    rootTestCase.failure();
+                }
             }
-            else if (!isCucumberFrameworkRunner) {
-                builder = this._addSuiteToBuilder(builder, runner, specFileName, suite);
-            }
+
         }
         return builder;
     }
