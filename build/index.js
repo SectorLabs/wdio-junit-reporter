@@ -134,6 +134,7 @@ class JunitReporter extends reporter_1.default {
                 continue;
             }
             const suite = this.suites[suiteKey];
+            const suiteNameWithoutFormat = suite.title
 
             for (let testKey of Object.keys(suite.tests)) {
                 if (testKey === 'undefined') { // fix cucumber hooks crashing reporter (INFO: we may not need this anymore)
@@ -141,7 +142,7 @@ class JunitReporter extends reporter_1.default {
                 }
                 const test = suite.tests[testKey];
                 const testTitle = test.fullTitle || test.title;
-                const rootTestCaseIndex = rootTestCases.findIndex(testCase => testTitle.includes(testCase._attributes.name))
+                const rootTestCaseIndex = rootTestCases.findIndex(() => testTitle.includes(suiteNameWithoutFormat))
                 const rootTestCase = rootTestCases[rootTestCaseIndex]
 
                 if (test.state === 'pending' || test.state === 'skipped') {
