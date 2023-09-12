@@ -89,7 +89,9 @@ class JunitReporter extends reporter_1.default {
 
             // Add only the top level describe block as a test suite
             if (!suite.parent) {
-                const filePath = specFileName.replace(process.cwd(), '.');
+                let filePath = specFileName;
+                if(this.options.e2eFolderPath && this.options.repoLinkFormat) filePath = `${this.options.repoLinkFormat}/` + this.options.e2eFolderPath + specFileName.split(this.options.e2eFolderPath).at(-1);
+
                 const suiteName = !this.options.suiteNameFormat || this.options.suiteNameFormat instanceof RegExp
                     ? this._prepareName(suite.title)
                     : this.options.suiteNameFormat({ name: this.options.suiteNameFormat.name, suite });
