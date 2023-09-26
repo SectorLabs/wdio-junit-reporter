@@ -143,9 +143,9 @@ class JunitReporter extends reporter_1.default {
                     continue;
                 }
                 const test = suite.tests[testKey];
-                const testTitle = test.fullTitle || test.title;
-                const rootTestCaseIndex = rootTestCases.findIndex(() => testTitle.includes(suiteNameWithoutFormat))
-                const rootTestCase = rootTestCases[rootTestCaseIndex]
+
+                const rootTestCaseIndex = rootTestCases.findIndex((testcase) => testcase._attributes.name.includes(suiteNameWithoutFormat));
+                const rootTestCase = rootTestCases[rootTestCaseIndex];
 
                 if (test.state === 'pending' || test.state === 'skipped') {
                     rootTestCase.skipped();
