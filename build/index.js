@@ -145,6 +145,10 @@ class JunitReporter extends reporter_1.default {
                 const test = suite.tests[testKey];
 
                 const rootTestCaseIndex = rootTestCases.findIndex((testcase) => testcase._attributes.name.includes(suiteNameWithoutFormat));
+                // Should exit loop if is a nested describe block
+                if(rootTestCaseIndex === -1){
+                    continue;
+                }
                 const rootTestCase = rootTestCases[rootTestCaseIndex];
 
                 if (test.state === 'pending' || test.state === 'skipped') {
