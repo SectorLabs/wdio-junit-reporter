@@ -113,6 +113,7 @@ class JunitReporter extends reporter_1.default {
                 // Add suite name as a test case
                 const testCase = testSuite
                     .testCase()
+                    .property('url:Reference', filePath)
                     .className(classNameFormat)
                     .name(suiteName)
                     .time(suite._duration / 1000);
@@ -151,6 +152,8 @@ class JunitReporter extends reporter_1.default {
                 }
                 const rootTestCase = rootTestCases[rootTestCaseIndex];
 
+                rootTestCase.property(`step[${test.state}]`, test.title)
+                
                 if (test.state === 'pending' || test.state === 'skipped') {
                     rootTestCase.skipped();
                     if (test.error) {
