@@ -5,13 +5,56 @@ WebdriverIO XML Reporter
 
 ## Installation
 
-The easiest way is to keep `@wdio/junit-reporter` as a devDependency in your `package.json`, via:
+This is a fork of `@wdio/junit-reporter` installed via git URL:
 
-```sh
-npm install @wdio/junit-reporter --save-dev
+```json
+"wdio-junit-reporter": "github:SectorLabs/wdio-junit-reporter#branch-name"
 ```
 
-Instructions on how to install `WebdriverIO` can be found [here](https://webdriver.io/docs/gettingstarted).
+Then use `'junit'` as the reporter name in your wdio config — WDIO resolves it to `wdio-junit-reporter`.
+
+## Development
+
+Source lives in `src/`, compiled output goes to `build/` via TypeScript.
+
+The `build/` folder is committed to the repo because this package is installed via git URL.
+Yarn/npm do not reliably run the `prepare` script for git dependencies, so the compiled output must be checked in.
+
+**After making changes to `src/`:**
+
+```sh
+npm run build   # compiles src/ -> build/
+git add build/ src/
+git commit
+git push
+```
+
+### Validating XML output with `normalize-results.js`
+
+Every time the reporter is updated, you should verify the XML output is still consistent by running the normalizer script against a full test suite run:
+
+```sh
+# Run your test suite with the previous version and save the XML results
+node normalize-results.js old-results/ > old.txt
+
+# Run your test suite with the updated version and save the XML results
+node normalize-results.js new-results/ > new.txt
+
+# Diff the two normalized outputs
+diff old.txt new.txt
+```
+
+The script extracts every test case from all XML files in a directory, normalizes them into a canonical sorted format (`classname | name | status | steps | file | error`), and outputs a deterministic text file. This allows reliable comparison between runs even when the XML file names differ (e.g. `results-0-4.desktop.xml` vs `results-0-7.desktop.xml`).
+
+If you add new features to the fork (e.g. new properties, metadata, or structural changes to the XML), make sure to update `normalize-results.js` to capture those additions so the validation remains comprehensive.
+
+**To pick up changes in the consuming repo:**
+
+```sh
+yarn upgrade wdio-junit-reporter
+```
+
+This updates the pinned commit hash in `yarn.lock`. A plain `yarn install` won't fetch new commits — the lockfile must be updated.
 
 ## Output
 

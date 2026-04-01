@@ -1,24 +1,28 @@
-import type { Reporters } from '@wdio/types';
-import type { SuiteStats } from '@wdio/reporter';
-type TestSuiteNameFunction = (options: TestSuiteNameFormatOptions) => string;
+import type { Reporters } from '@wdio/types'
+import type { SuiteStats } from '@wdio/reporter'
+
+type TestSuiteNameFunction = (options: TestSuiteNameFormatOptions) => string
+
 interface ClassNameFormatOptions {
     /**
      * Configured package name
      */
-    packageName?: string;
+    packageName?: string
     /**
      * Name of the current cucumber feature
      */
-    activeFeatureName?: string;
+    activeFeatureName?: string
     /**
      * Context of the current suite
      */
-    suite?: SuiteStats;
+    suite?: SuiteStats
 }
+
 interface TestSuiteNameFormatOptions {
-    name?: string;
-    suite: SuiteStats;
+    name?: string
+    suite: SuiteStats
 }
+
 export interface JUnitReporterOptions extends Reporters.Options {
     /**
      * Gives the ability to provide custom regex for formatting test suite name (e.g. in output xml ) or
@@ -33,7 +37,7 @@ export interface JUnitReporterOptions extends Reporters.Options {
      *     return `${options.suite.title}`
      * }
      */
-    suiteNameFormat?: RegExp | TestSuiteNameFunction;
+    suiteNameFormat?: RegExp | TestSuiteNameFunction
     /**
      * Give the ability to override the generated classname of a test case.
      *
@@ -42,14 +46,14 @@ export interface JUnitReporterOptions extends Reporters.Options {
      *     return ``${options._packageName}.${options.suite.fullTitle.replace(/\s/g, '_')}``
      * }
      */
-    classNameFormat?: (options: ClassNameFormatOptions) => string;
+    classNameFormat?: (options: ClassNameFormatOptions) => string
     /**
      * Adds a file attribute to each testcase. This config is primarily for CircleCI. This setting
      * provides richer details but may break on other CI platforms.
      *
      * @default false
      */
-    addFileAttribute?: boolean;
+    addFileAttribute?: boolean
     /**
      * You can break out packages by an additional level by setting `'packageName'`. For example, if
      * you wanted to iterate over a test suite with different environment variable set:
@@ -70,7 +74,7 @@ export interface JUnitReporterOptions extends Reporters.Options {
      * };
      * ```
      */
-    packageName?: string;
+    packageName?: string
     /**
      * Allows to set various combinations of error notifications inside xml. Given a Jasmine test
      * like `expect(true).toBe(false, 'my custom message')` you will get this test error:
@@ -108,7 +112,8 @@ export interface JUnitReporterOptions extends Reporters.Options {
      * };
      * ```
      */
-    errorOptions?: Record<string, string>;
+    errorOptions?: Record<string, string>
+
     /**
      * Optional parameter, set this parameter to true in order to attach console logs from the test in the reporter.
      * @default false
@@ -130,7 +135,8 @@ export interface JUnitReporterOptions extends Reporters.Options {
      * };
      * ```
      */
-    addWorkerLogs?: boolean;
+    addWorkerLogs?: boolean
+
     /**
      * Path to the e2e folder used to construct GitHub links in the report.
      * When set together with `repoLinkFormat`, the file path in the report
@@ -138,14 +144,13 @@ export interface JUnitReporterOptions extends Reporters.Options {
      *
      * @example 'e2e/'
      */
-    e2eFolderPath?: string;
+    e2eFolderPath?: string
+
     /**
      * Base URL for the repository link format (e.g. GitHub URL).
      * Used together with `e2eFolderPath` to construct full file URLs.
      *
      * @example 'https://github.com/org/repo/blob/main'
      */
-    repoLinkFormat?: string;
+    repoLinkFormat?: string
 }
-export {};
-//# sourceMappingURL=types.d.ts.map
