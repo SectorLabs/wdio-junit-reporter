@@ -5,13 +5,37 @@ WebdriverIO XML Reporter
 
 ## Installation
 
-The easiest way is to keep `@wdio/junit-reporter` as a devDependency in your `package.json`, via:
+This is a fork of `@wdio/junit-reporter` installed via git URL:
 
-```sh
-npm install @wdio/junit-reporter --save-dev
+```json
+"wdio-junit-reporter": "github:SectorLabs/wdio-junit-reporter#branch-name"
 ```
 
-Instructions on how to install `WebdriverIO` can be found [here](https://webdriver.io/docs/gettingstarted).
+Then use `'junit'` as the reporter name in your wdio config — WDIO resolves it to `wdio-junit-reporter`.
+
+## Development
+
+Source lives in `src/`, compiled output goes to `build/` via TypeScript.
+
+The `build/` folder is committed to the repo because this package is installed via git URL.
+Yarn/npm do not reliably run the `prepare` script for git dependencies, so the compiled output must be checked in.
+
+**After making changes to `src/`:**
+
+```sh
+npm run build   # compiles src/ -> build/
+git add build/ src/
+git commit
+git push
+```
+
+**To pick up changes in the consuming repo:**
+
+```sh
+yarn upgrade wdio-junit-reporter
+```
+
+This updates the pinned commit hash in `yarn.lock`. A plain `yarn install` won't fetch new commits — the lockfile must be updated.
 
 ## Output
 
