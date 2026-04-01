@@ -1,5 +1,5 @@
 {
-  "name": "@wdio/junit-reporter",
+  "name": "wdio-junit-reporter",
   "version": "9.26.1",
   "description": "A WebdriverIO reporter that creates Jenkins compatible XML based JUnit reports",
   "author": "Christian Bromann <mail@bromann.dev>",
