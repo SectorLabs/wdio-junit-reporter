@@ -1,12 +1,12 @@
 {
-  "name": "wdio-junit-reporter",
-  "version": "9.26.1",
+  "name": "@sector-labs/wdio-junit-reporter",
+  "version": "10.0.0",
   "description": "A WebdriverIO reporter that creates Jenkins compatible XML based JUnit reports",
-  "author": "Christian Bromann <mail@bromann.dev>",
-  "homepage": "https://github.com/webdriverio/webdriverio/tree/main/packages/wdio-junit-reporter",
+  "author": "Sector Labs <open-source@sectorlabs.ro> / Christian Bromann",
+  "homepage": "https://github.com/SectorLabs/wdio-junit-reporter",
   "license": "MIT",
   "engines": {
-    "node": ">=18.20.0"
+    "node": ">=20.0.0"
   },
   "type": "module",
   "types": "./build/index.d.ts",
@@ -29,9 +29,10 @@
     "reporter"
   ],
   "bugs": {
-    "url": "https://github.com/webdriverio/webdriverio/issues"
+    "url": "https://github.com/SectorLabs/wdio-junit-reporter/issues"
   },
   "scripts": {
+    "verify": "tsc --noEmit",
     "build": "tsc",
     "clean": "rm -rf build",
     "prepare": "tsc"
@@ -40,8 +41,7 @@
     "@wdio/reporter": "^9.26.1",
     "@wdio/types": "^9.26.1",
     "json-stringify-safe": "^5.0.1",
-    "junit-report-builder": "^5.1.1",
-    "typescript": "^5.0.0"
+    "junit-report-builder": "^5.1.1"
   },
   "devDependencies": {
     "@types/json-stringify-safe": "^5.0.0",

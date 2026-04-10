@@ -1,29 +1,35 @@
-WebdriverIO XML Reporter
-========================
+# wdio-junit-reporter
 
-> A WebdriverIO reporter that creates [Jenkins](http://jenkins-ci.org/) compatible XML based JUnit reports
+Fork of [@wdio/junit-reporter](https://github.com/webdriverio/webdriverio/tree/main/packages/wdio-junit-reporter). A WebdriverIO reporter that creates Jenkins compatible XML based JUnit reports.
+
+## Changes from upstream
+
+* Add GitHub repo link and step names for test cases
+* Add validator script for XML consistency checking
+* Update to v9
 
 ## Installation
 
-This is a fork of `@wdio/junit-reporter` installed via git URL:
-
-```json
-"wdio-junit-reporter": "github:SectorLabs/wdio-junit-reporter#branch-name"
+```
+npm install @sector-labs/wdio-junit-reporter
 ```
 
-Then use `'junit'` as the reporter name in your wdio config — WDIO resolves it to `wdio-junit-reporter`.
+Import the reporter class directly in your wdio config instead of using the `'junit'` string shorthand:
+
+```js
+import JunitReporter from '@sector-labs/wdio-junit-reporter'
+```
 
 ## Development
 
 Source lives in `src/`, compiled output goes to `build/` via TypeScript.
 
-The `build/` folder is committed to the repo because this package is installed via git URL.
-Yarn/npm do not reliably run the `prepare` script for git dependencies, so the compiled output must be checked in.
+The `build/` folder is committed to the repo because this package is installed via git URL. Yarn/npm do not reliably run the `prepare` script for git dependencies, so the compiled output must be checked in.
 
 **After making changes to `src/`:**
 
 ```sh
-npm run build   # compiles src/ -> build/
+npm run build
 git add build/ src/
 git commit
 git push
@@ -31,22 +37,15 @@ git push
 
 ### Validating XML output with `normalize-results.js`
 
-Every time the reporter is updated, you should verify the XML output is still consistent by running the normalizer script against a full test suite run:
+Every time the reporter is updated, verify the XML output is still consistent:
 
 ```sh
-# Run your test suite with the previous version and save the XML results
 node normalize-results.js old-results/ > old.txt
-
-# Run your test suite with the updated version and save the XML results
 node normalize-results.js new-results/ > new.txt
-
-# Diff the two normalized outputs
 diff old.txt new.txt
 ```
 
-The script extracts every test case from all XML files in a directory, normalizes them into a canonical sorted format (`classname | name | status | steps | file | error`), and outputs a deterministic text file. This allows reliable comparison between runs even when the XML file names differ (e.g. `results-0-4.desktop.xml` vs `results-0-7.desktop.xml`).
-
-If you add new features to the fork (e.g. new properties, metadata, or structural changes to the XML), make sure to update `normalize-results.js` to capture those additions so the validation remains comprehensive.
+The script extracts every test case from all XML files in a directory, normalizes them into a canonical sorted format, and outputs a deterministic text file.
 
 **To pick up changes in the consuming repo:**
 
@@ -54,273 +53,36 @@ If you add new features to the fork (e.g. new properties, metadata, or structura
 yarn upgrade wdio-junit-reporter
 ```
 
-This updates the pinned commit hash in `yarn.lock`. A plain `yarn install` won't fetch new commits — the lockfile must be updated.
-
-## Output
-
-This reporter will output a report for each runner, so in turn you will receive an xml report for each spec file. Below
-are examples of XML output given different scenarios in the spec file.
-
-### Single describe block
-```javascript
-describe('a test suite', () => {
-    it('a test case', function () {
-      // do something
-      // assert something
-    });
-});
-```
-becomes
-```xml
-<testsuites>
-    <testsuite name="a test suite" timestamp="2019-04-18T13:45:21" time="11.735" tests="0" failures="0" errors="0" skipped="0">
-        <properties>
-          <property name="specId" value="0"/>
-          <property name="suiteName" value="a test suite"/>
-          <property name="capabilities" value="chrome"/>
-          <property name="file" value=".\test\specs\asuite.spec.js"/>
-        </properties>
-        <testcase classname="chrome.a_test_case" name="a_test_suite_a_test_case" time="11.706"/>
-    </testsuite>
-</testsuites>
-```
-
-### Nested describe block
-```javascript
-describe('a test suite', () => {
-    describe('a nested test suite', function() {
-        it('a test case', function () {
-          // do something
-          // assert something
-        });
-    });
-});
-```
-becomes
-```xml
-<testsuites>
-    <testsuite name="a test suite" timestamp="2019-04-18T13:45:21" time="11.735" tests="0" failures="0" errors="0" skipped="0">
-    <properties>
-      <property name="specId" value="0"/>
-      <property name="suiteName" value="a test suite"/>
-      <property name="capabilities" value="chrome"/>
-      <property name="file" value=".\test\specs\asuite.spec.js"/>
-    </properties>
-  </testsuite>
-  <testsuite name="a nested test suite" timestamp="2019-04-18T13:45:21" time="11.735" tests="0" failures="0" errors="0" skipped="0">
-    <properties>
-      <property name="specId" value="0"/>
-      <property name="suiteName" value="a nested test suite"/>
-      <property name="capabilities" value="chrome"/>
-      <property name="file" value=".\test\specs\asuite.spec.js"/>
-    </properties>
-    <testcase classname="chrome.a_test_case" name="a nested test suite a test case" time="11.706"/>
-  </testsuite>
-</testsuites>
-```
-
-### Multiple describe block
-```javascript
-describe('a test suite', () => {
-    it('a test case', function () {
-      // do something
-      // assert something
-    });
-});
-describe('a second test suite', () => {
-    it('a second test case', function () {
-      // do something
-      // assert something
-    });
-});
-```
-becomes
-```xml
-<testsuites>
-    <testsuite name="a test suite" timestamp="2019-04-18T13:45:21" time="11.735" tests="0" failures="0" errors="0" skipped="0">
-    <properties>
-      <property name="specId" value="0"/>
-      <property name="suiteName" value="a test suite"/>
-      <property name="capabilities" value="chrome"/>
-      <property name="file" value=".\test\specs\asuite.spec.js"/>
-      <testcase classname="chrome.a_test_case" name="a nested test suite a test case" time="11.706"/>
-    </properties>
-  </testsuite>
-  <testsuite name="a second test suite" timestamp="2019-04-18T13:45:21" time="11.735" tests="0" failures="0" errors="0" skipped="0">
-    <properties>
-      <property name="specId" value="0"/>
-      <property name="suiteName" value="a second test suite"/>
-      <property name="capabilities" value="chrome"/>
-      <property name="file" value=".\test\specs\asuite.spec.js"/>
-    </properties>
-    <testcase classname="chrome.a_second_test_case" name="a_second_test_suite_a_second_test_case" time="11.706"/>
-  </testsuite>
-</testsuites>
-```
-
-### Failures and Errors
-All test case failures are mapped as JUnit test case errors. A failed test case due to assertion failure or error will look like:
-
-```xml
-<testcase classname="chrome.a_test_case" name="a_test_suite_a_test_case" time="0.372">
-  <error message="Error: some error"/>
-    <system-err>
-        <![CDATA[
-Error: some assertion failure
-    at UserContext.<anonymous> (C:\repo\webdriver-example\test\specs/a_test_suite.spec.js:22:17)
-]]>
-  </system-err>
-</testcase>
-```
-
 ## Configuration
 
-Following code shows the default wdio test runner configuration. Just add `'junit'` as reporter
-to the array. To get some output during the test you can run the [WDIO Dot Reporter](https://github.com/webdriverio/webdriverio/tree/main/packages/wdio-dot-reporter) and the WDIO JUnit Reporter at the same time:
-
 ```js
+import JunitReporter from '@sector-labs/wdio-junit-reporter'
+
 // wdio.conf.js
 module.exports = {
-    // ...
     reporters: [
         'dot',
-        ['junit', {
+        [JunitReporter, {
             outputDir: './',
-            outputFileFormat: function(options) { // optional
+            outputFileFormat: function(options) {
                 return `results-${options.cid}.${options.capabilities}.xml`
             }
         }]
     ],
-    // ...
 };
 ```
 
-The following options are supported:
+### Options
 
-### outputDir
-Define a directory where your xml files should get stored.
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `outputDir` | `String` | required | Directory for XML files |
+| `outputFileFormat` | `Function` | — | Custom filename function |
+| `suiteNameFormat` | `Regex` | `/[^a-zA-Z0-9@]+/` | Regex for formatting suite names |
+| `addFileAttribute` | `Boolean` | `false` | Add file attribute to each testcase |
+| `packageName` | `String` | — | Break out packages by additional level |
+| `errorOptions` | `Object` | `{ error: "message" }` | Error notification mapping |
 
-Type: `String`<br />
-Required
+## License
 
-### outputFileFormat
-Define the xml files created after the test execution.
-
-Type: `Object`<br />
-Default: ``function (opts) { return `wdio-${this.cid}-${name}-reporter.log` }``
-
-```
-outputFileFormat: function (options) {
-    return 'mycustomfilename.xml';
-}
-```
-
-> Note: `options.capabilities` is your capabilities object for that runner, so specifying `${options.capabilities}` in your string will return [Object object]. You must specify which properties of capabilities you want in your filename.
-
-### suiteNameFormat
-
-Gives the ability to provide custom regex for formatting test suite name (e.g. in output xml ).
-
-Type: `Regex`,<br />
-Default: `/[^a-zA-Z0-9@]+/`
-
-```js
-// wdio.conf.js
-module.exports = {
-    // ...
-    reporters: [
-        'dot',
-        ['junit', {
-            outputDir: './',
-            suiteNameFormat: /[^a-zA-Z0-9@]+/
-            outputFileFormat: function(options) { // optional
-                return `results-${options.cid}.${options.capabilities}.xml`
-            }
-        }]
-    ],
-    // ...
-};
-```
-
-### addFileAttribute
-
-Adds a file attribute to each testcase. This config is primarily for CircleCI. This setting provides richer details but may break on other CI platforms.
-
-Type: `Boolean`,<br />
-Default: `false`
-
-
-### packageName
-
-You can break out packages by an additional level by setting `'packageName'`. For example, if you wanted to iterate over a test suite with different environment variable set:
-
-Type: `String`<br />
-Example:
-
-```js
-// wdio.conf.js
-module.exports = {
-    // ...
-    reporters: [
-        'dot',
-        ['junit', {
-            outputDir: './',
-            packageName: process.env.USER_ROLE // chrome.41 - administrator
-        }]
-    ]
-    // ...
-};
-```
-
-### errorOptions
-
-Allows to set various combinations of error notifications inside xml.<br />
-Given a Jasmine test like `expect(true).toBe(false, 'my custom message')` you will get this test error:
-
-```
-{
-    matcherName: 'toBe',
-    message: 'Expected true to be false, \'my custom message\'.',
-    stack: 'Error: Expected true to be false, \'my custom message\'.\n    at UserContext.it (/home/mcelotti/Workspace/WebstormProjects/forcebeatwio/test/marco/prova1.spec.js:3:22)',
-    passed: false,
-    expected: [ false, 'my custom message' ],
-    actual: true
-}
-```
-
-Therefore you can choose *which* key will be used *where*, see the example below.
-
-Type: `Object`,<br />
-Default: `errorOptions: { error: "message" }`<br />
-Example:
-
-```js
-// wdio.conf.js
-module.exports = {
-    // ...
-    reporters: [
-        'dot',
-        ['junit', {
-            outputDir: './',
-            errorOptions: {
-                error: 'message',
-                failure: 'message',
-                stacktrace: 'stack'
-            }
-        }]
-    ],
-    // ...
-};
-```
-
-## Jenkins Setup
-
-Last but not least you need to tell your CI job (e.g. Jenkins) where it can find the xml file. To do that, add a post-build action to your job that gets executed after the test has run and point Jenkins (or your desired CI system) to your XML test results:
-
-![Point Jenkins to XML files](https://webdriver.io/img/jenkins-postjob.png "Point Jenkins to XML files")
-
-If there is no such post-build step in your CI system there is probably a plugin for that somewhere on the internet.
-
-----
-
-For more information on WebdriverIO see the [homepage](https://webdriver.io).
+MIT
